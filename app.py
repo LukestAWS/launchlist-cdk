@@ -3,8 +3,7 @@ import os
 
 import aws_cdk as cdk
 
-from launchlist_cdk.launchlist_cdk_stack import LaunchlistCdkStack
-
+from launchlist.launchlist_stack import LaunchlistStack
 
 app = cdk.App()
 LaunchlistCdkStack(app, "LaunchlistCdkStack",
