@@ -15,7 +15,7 @@ class LaunchlistStack(Stack):
         super().__init__(scope, id, **kwargs)
 
         bucket = s3.Bucket(self, "SiteBucket",
-            block_public_access=s3.BlockPublicAccess.BLOCK_ACLS,
+            block_public_access=s3.BlockPublicAccess(block_public_policy=False),  # fix public policy block
             public_read_access=True,
             website_index_document="index.html",
             auto_delete_objects=True,
