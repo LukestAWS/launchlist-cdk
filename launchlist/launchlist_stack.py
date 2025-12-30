@@ -39,10 +39,15 @@ class LaunchlistStack(Stack):
         # Bucket policy to allow CloudFront OAC
         bucket.add_to_resource_policy(
             s3.PolicyStatement(
-                actions=["s3:GetObject"],
-                effect=s3.Effect.ALLOW,
-                principals=[cloudfront.DistributionPrincipal(distribution)],
-                resources=[bucket.arn_for_objects("*")],
+        actions=["s3:GetObject"],
+        effect=s3.Effect.ALLOW,
+        principals=[s3.ServicePrincipal("cloudfront.amazonaws.com")], # Use ServicePrincipal
+        resources=[bucket.arn_for_objects("*")],
+        conditions={
+            "StringEquals": {
+                "AWS:SourceArn": f"arn:aws:cloudfront::{self.account}:distribution/{distribution.distribution_id}"
+                    }
+                }
             )
         )
 
