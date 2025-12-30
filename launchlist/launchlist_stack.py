@@ -25,7 +25,7 @@ class LaunchlistStack(Stack):
         # Origin Access Control (modern replacement for OAI)
         oac = cloudfront.OriginAccessControl(self, "OAC",
             origin_access_control_name="LaunchlistOAC",
-            signing_behavior=cloudfront.SigningBehavior.SIGV4_ALWAYS,
+            signing_behavior=cloudfront.SigningBehavior.ALWAYS, # changed from SIGV4_ALWAYS
         )
 
         # CloudFront distribution with OAC
