@@ -14,21 +14,19 @@ class LaunchlistStack(Stack):
     def __init__(self, scope: Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
-        # Private S3 bucket
+        # Private S3 bucket (no website config)
         bucket = s3.Bucket(self, "SiteBucket",
-            block_public_access=s3.BlockPublicAccess.BLOCK_ALL,  # private
-            website_index_document="index.html",
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             auto_delete_objects=True,
             removal_policy=RemovalPolicy.DESTROY,
         )
 
-        # Origin Access Control (modern replacement for OAI)
+        # Origin Access Control (OAC)
         oac = cloudfront.OriginAccessControl(self, "OAC",
             origin_access_control_name="LaunchlistOAC",
-            signing_behavior=cloudfront.SigningBehavior.ALWAYS, # changed from SIGV4_ALWAYS
         )
 
-        # CloudFront distribution with OAC
+        # CloudFront distribution
         distribution = cloudfront.Distribution(self, "SiteDistribution",
             default_behavior=cloudfront.BehaviorOptions(
                 origin=origins.S3BucketOrigin.with_origin_access_control(bucket, origin_access_control=oac),
@@ -36,18 +34,13 @@ class LaunchlistStack(Stack):
             ),
         )
 
-        # Bucket policy to allow CloudFront OAC
+        # Bucket policy for OAC
         bucket.add_to_resource_policy(
             s3.PolicyStatement(
-        actions=["s3:GetObject"],
-        effect=s3.Effect.ALLOW,
-        principals=[s3.ServicePrincipal("cloudfront.amazonaws.com")], # Use ServicePrincipal
-        resources=[bucket.arn_for_objects("*")],
-        conditions={
-            "StringEquals": {
-                "AWS:SourceArn": f"arn:aws:cloudfront::{self.account}:distribution/{distribution.distribution_id}"
-                    }
-                }
+                actions=["s3:GetObject"],
+                effect=s3.Effect.ALLOW,
+                principals=[distribution.grant_principal],
+                resources=[bucket.arn_for_objects("*")],
             )
         )
 
