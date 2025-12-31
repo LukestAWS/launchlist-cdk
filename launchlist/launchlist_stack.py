@@ -14,7 +14,7 @@ class LaunchlistStack(Stack):
     def __init__(self, scope: Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
-        # Private S3 bucket (no website config)
+        # Private S3 bucket
         bucket = s3.Bucket(self, "SiteBucket",
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             auto_delete_objects=True,
@@ -24,15 +24,22 @@ class LaunchlistStack(Stack):
         # CloudFront distribution with automatic OAC
         distribution = cloudfront.Distribution(self, "SiteDistribution",
             default_behavior=cloudfront.BehaviorOptions(
-                origin=origins.S3BucketOrigin.with_origin_access_control(
-                    bucket,
-                    origin_access_levels=[cloudfront.AccessLevel.READ, cloudfront.AccessLevel.LIST]  # add LIST for proper 404
-                ),
+                origin=origins.S3BucketOrigin.with_origin_access_control(bucket),
                 viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
             ),
         )
 
-        # Deploy assets + invalidate cache
+        # Explicit bucket policy for CloudFront OAC
+        bucket.add_to_resource_policy(
+            s3.PolicyStatement(
+                actions=["s3:GetObject"],
+                effect=s3.Effect.ALLOW,
+                principals=[distribution.grant_principal],
+                resources=[bucket.arn_for_objects("*")],
+            )
+        )
+
+        # Deploy assets + invalidate
         s3deploy.BucketDeployment(self, "DeploySite",
             sources=[s3deploy.Source.asset("./assets")],
             destination_bucket=bucket,
