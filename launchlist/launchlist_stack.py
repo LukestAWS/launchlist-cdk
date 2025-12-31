@@ -4,6 +4,7 @@ from aws_cdk import (
     aws_s3_deployment as s3deploy,
     aws_cloudfront as cloudfront,
     aws_cloudfront_origins as origins,
+    aws_iam as iam,
     RemovalPolicy,
     CfnOutput,
 )
@@ -27,15 +28,21 @@ class LaunchlistStack(Stack):
                 origin=origins.S3BucketOrigin.with_origin_access_control(bucket),
                 viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
             ),
+            default_root_object="index.html",
         )
 
         # Explicit bucket policy for CloudFront OAC
         bucket.add_to_resource_policy(
-            s3.PolicyStatement(
+            iam.PolicyStatement(
                 actions=["s3:GetObject"],
-                effect=s3.Effect.ALLOW,
-                principals=[distribution.grant_principal],
+                effect=iam.Effect.ALLOW,
+                principals=[iam.ServicePrincipal("cloudfront.amazonaws.com")],
                 resources=[bucket.arn_for_objects("*")],
+                conditions={
+                    "StringEquals": {
+                        "AWS:SourceArn": distribution.distribution_arn
+                    }
+                },
             )
         )
 
