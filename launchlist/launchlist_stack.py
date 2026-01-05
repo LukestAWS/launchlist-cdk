@@ -5,6 +5,9 @@ from aws_cdk import (
     aws_cloudfront as cloudfront,
     aws_cloudfront_origins as origins,
     aws_iam as iam,
+    aws_dynamodb as dynamodb,
+    aws_lambda as _lambda,
+    aws_apigateway as apigw,
     RemovalPolicy,
     CfnOutput,
 )
