@@ -18,7 +18,7 @@ class LaunchlistStack(Stack):
     def __init__(self, scope: Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
-        # Private S3 bucket
+        # Private S3 bucket (no public access)
         bucket = s3.Bucket(self, "SiteBucket",
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             auto_delete_objects=True,
@@ -49,7 +49,7 @@ class LaunchlistStack(Stack):
             )
         )
 
-        # Deploy assets + invalidate
+        # Deploy static assets + invalidate cache
         s3deploy.BucketDeployment(self, "DeploySite",
             sources=[s3deploy.Source.asset("./assets")],
             destination_bucket=bucket,
@@ -57,6 +57,6 @@ class LaunchlistStack(Stack):
             distribution_paths=["/*"],
         )
 
+        # Output live URL
         CfnOutput(self, "SiteURL", value=distribution.distribution_domain_name)
-
         print(f"SITE_URL=https://{distribution.distribution_domain_name}")
