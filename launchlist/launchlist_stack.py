@@ -76,8 +76,24 @@ class LaunchlistStack(Stack):
 
         table.grant_write_data(subscribe_lambda)
 
+    # API Gateway
         api = apigw.RestApi(self, "LaunchlistApi",
             rest_api_name="LaunchList API",
+        )
+
+        # Cognito Authorizer
+        authorizer = apigw.CognitoUserPoolsAuthorizer(self, "LaunchlistAuthorizer",
+            cognito_user_pools=[user_pool],
+        )
+
+        # Protected POST /subscribe
+        subscribe_integration = apigw.LambdaIntegration(subscribe_lambda)
+
+        subscribe_resource = api.root.add_resource("subscribe")
+        subscribe_resource.add_method("POST",
+            subscribe_integration,
+            authorizer=authorizer,
+            authorization_type=apigw.AuthorizationType.COGNITO,
         )
 
         subscribe_integration = apigw.LambdaIntegration(subscribe_lambda)
