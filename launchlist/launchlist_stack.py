@@ -59,6 +59,12 @@ class LaunchlistStack(Stack):
             auto_verify=cognito.AutoVerifiedAttrs(email=True),
             removal_policy=RemovalPolicy.DESTROY,
         )
+        # Cognito Domain (for Hosted UI)
+        cognito_domain = user_pool.add_domain("LaunchlistDomain",
+            cognito_domain=cognito.CognitoDomainOptions(
+                domain_prefix="launchlist" + str(hash(self.account) % 10000),  # unique prefix
+            ),
+        )
 
         user_pool_client = user_pool.add_client("LaunchlistAppClient",
             auth_flows=cognito.AuthFlow(user_password=True),
@@ -82,6 +88,7 @@ class LaunchlistStack(Stack):
             runtime=_lambda.Runtime.PYTHON_3_12,
             handler="handler.main",
             code=_lambda.Code.from_asset("lambda"),
+
             environment={
                 "TABLE_NAME": table.table_name,
                 "SES_FROM_EMAIL": "mlukest@gmail.com" 
