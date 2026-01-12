@@ -62,7 +62,7 @@ class LaunchlistStack(Stack):
         # Cognito Domain (for Hosted UI)
         cognito_domain = user_pool.add_domain("LaunchlistDomain",
             cognito_domain=cognito.CognitoDomainOptions(
-                domain_prefix="launchlist" + str(hash(self.account) % 10000),  # unique prefix
+                domain_prefix="mlukest-launchlist-v1",  # unique prefix
             ),
         )
 
